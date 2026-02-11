@@ -17,7 +17,74 @@
 }
 # ------------------------------------------------------------------------------
 
-df_FM <- arrow::read_feather("data_fmt/trajectory/FM_df.feather")
+# data prep
+
+df_FM <-     arrow::read_feather("data_fmt/trajectory/FM_df.feather")
+df_alates <- arrow::read_feather("data_fmt/trajectory/alates_df.feather")
+df_worker <- arrow::read_feather("data_fmt/trajectory/worker_df.feather")
+df_soldier <- arrow::read_feather("data_fmt/trajectory/soldier_df.feather")
+
+pattern <- "^.*\\d+-\\d+"
+df_FM <- df_FM %>% mutate(video = str_extract(video, pattern))
+df_alates <- df_alates %>% mutate(video = str_extract(video, pattern))
+df_worker <- df_worker %>% mutate(video = str_extract(video, pattern))
+df_soldier <- df_soldier %>% mutate(video = str_extract(video, pattern))
+
+
+# plot all trajectories
+
+plot_traj <- function(df, ...){
+  ggplot(df, aes(x = x_body, y = y_body, col = as.factor(ind_id) ))+
+    scale_color_viridis(option = "D")+
+    geom_path(alpha = 1)+
+    facet_wrap(~video)+
+    theme_classic()+
+    theme(aspect.ratio = 2/3, legend.position = "none")+
+    labs(...)
+}
+
+save_comparison_plot <- function(df1, df2, video_name) {
+  p1 <- plot_traj(df1, title = video_name)
+  p2 <- plot_traj(df2)
+  ggsave(
+    filename = file.path("output/trajectory", paste0(video_name, ".png")),
+    plot = p1 + p2, width = 6, height = 4
+  )
+}
+
+
+# FM
+video_list <- unique(df_FM$video)
+for(i in 1:length(video_list)){
+  save_comparison_plot(
+    df1 = df_FM %>% filter(video == video_list[i] & ind_id %% 2 == 0),
+    df2 = df_FM %>% filter(video == video_list[i] & ind_id %% 2 == 1),
+    video_name = video_list[i])
+}
+
+# alate-worker
+video_list_a <- unique(df_alates$video)
+video_list_w <- unique(df_worker$video)
+video_list <- video_list_a[video_list_a %in% video_list_w]
+for(i in 1:length(video_list)){
+  save_comparison_plot(
+    df1 = df_alates %>% filter(video == video_list[i]),
+    df2 = df_worker %>% filter(video == video_list[i]),
+    video_name = video_list[i])
+}
+
+# alate-soldier
+video_list_s <- unique(df_soldier$video)
+video_list <- video_list_a[video_list_a %in% video_list_s]
+for(i in 1:length(video_list)){
+  save_comparison_plot(
+    df1 = df_alates %>% filter(video == video_list[i]),
+    df2 = df_soldier %>% filter(video == video_list[i]),
+    video_name = video_list[i])
+}
+
+
+
 
 
 
