@@ -35,8 +35,9 @@ df_soldier <- df_soldier %>% mutate(video = str_extract(video, pattern))
 
 plot_traj <- function(df, ...){
   ggplot(df, aes(x = x_body, y = y_body, col = as.factor(ind_id) ))+
-    scale_color_viridis(option = "D")+
+    scale_color_viridis(discrete = T, option = "D")+
     geom_path(alpha = 1)+
+    scale_y_reverse() +
     facet_wrap(~video)+
     theme_classic()+
     theme(aspect.ratio = 2/3, legend.position = "none")+
