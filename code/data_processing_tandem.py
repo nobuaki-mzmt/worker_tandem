@@ -85,6 +85,11 @@ def data_filter(in_dir, caste,
           limit, check_list, skip_num = 2, None, None
           cx = [350, 350]
           cy = [350, 1020]
+       if video == "Ret_ama_SM_F_5-6":
+          # three individuals escaped and contamintaed in one well. we use only well 1 and 4 (0,3)
+          limit, check_list, skip_num = 2, None, None
+          cx = [1700, 350]
+          cy = [350, 1020]
     
     # body parts of interst
     mapping = {
@@ -152,9 +157,9 @@ def data_filter(in_dir, caste,
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-def main_data_filter(overwrite=False):
-    place = "analysis/data_raw/trajectory/*"
-    out_dir = "analysis/data_fmt/trajectory/"
+def main_data_filter(overwrite=True):
+    place = "data_raw/trajectory/*"
+    out_dir = "data_fmt/trajectory/"
     data_place_caste = glob.glob(place)
     
     for data_place_caste_i in data_place_caste:

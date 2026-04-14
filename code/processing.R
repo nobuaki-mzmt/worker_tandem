@@ -30,6 +30,21 @@ df_alates <- df_alates %>% mutate(video = str_extract(video, pattern))
 df_worker <- df_worker %>% mutate(video = str_extract(video, pattern))
 df_soldier <- df_soldier %>% mutate(video = str_extract(video, pattern))
 
+# skip_list
+df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_F_1-6" & ind_id %in% c(4, 5)))
+df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_H_7-12" & ind_id %in% c(4)))
+df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_I_1-6" & ind_id %in% c(1,4)))
+df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_I_7-12" & ind_id %in% c(1))) 
+df_alates <- df_alates %>% filter(!(video == "Ret_ama_MW_G_7-12" & ind_id %in% c(4,5)))
+df_alates <- df_alates %>% filter(!(video == "Ret_ama_SM_I_7-12"& ind_id %in% c(0, 3)))
+
+df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_F_1-6" & ind_id %in% c(4, 5)))
+df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_G_1-6" & ind_id %in% c(1,2,4,5)))
+df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_H_7-12" & ind_id %in% c(4)))
+df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_I_1-6" & ind_id %in% c(1,4)))
+df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_I_7-12" & ind_id %in% c(1))) 
+df_worker <- df_worker %>% filter(!(video == "Ret_ama_MW_G_7-12" & ind_id %in% c(4,5)))
+df_soldier <- df_soldier %>% filter(!(video == "Ret_ama_SM_I_7-12"& ind_id %in% c(0, 3)))
 
 # plot all trajectories
 
@@ -37,6 +52,7 @@ plot_traj <- function(df, ...){
   ggplot(df, aes(x = x_body, y = y_body, col = as.factor(ind_id) ))+
     scale_color_viridis(discrete = T, option = "D")+
     geom_path(alpha = 1)+
+    coord_cartesian(xlim = c(0, 2100), ylim=c(0, 1400)) +
     scale_y_reverse() +
     facet_wrap(~video)+
     theme_classic()+
@@ -83,14 +99,6 @@ for(i in 1:length(video_list)){
     df2 = df_soldier %>% filter(video == video_list[i]),
     video_name = video_list[i])
 }
-
-
-
-
-
-
-
-
 
 
 
