@@ -51,3 +51,6 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+worker_tandem.Rproj
+data_fmt/df_all.rda
+.vscode/settings.json
