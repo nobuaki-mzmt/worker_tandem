@@ -59,12 +59,25 @@ def data_filter(in_dir, caste,
     video = os.path.splitext(os.path.basename(f_name))[0]
     
     ## load data
-    with h5py.File(f_name, "r") as f:
-      #dset_names = list(f.keys())
-      # shape: (frames, nodes, coords, individuals)
-      full_locations = f["tracks"][:].T
-      node_names = [n.decode() for n in f["node_names"][:]]
+    #with h5py.File(f_name, "r") as f:
+    #  dset_names = list(f.keys())
+    #  # shape: (frames, nodes, coords, individuals)
+    #  track_names = f["track_names"][:]
+    #  print(track_names)
+    #  full_locations = f["tracks"][:].T
+    #  node_names = [n.decode() for n in f["node_names"][:]]
     
+    with h5py.File(f_name, "r") as f:
+      raw_track_names = [n.decode() for n in f["track_names"][:]]
+      def extract_id(name):
+          return int(name.replace("track_", ""))
+      track_ids = np.array([extract_id(n) for n in raw_track_names])
+      order = np.argsort(track_ids)
+      track_names = np.array(raw_track_names)[order]
+      full_locations = f["tracks"][:].T[..., order]
+      node_names = [n.decode() for n in f["node_names"][:]]
+      print(list(zip(track_ids[order], track_names)))
+
     n_frames, n_nodes, n_coords, n_inds = full_locations.shape
     print(f"{video}: {n_inds} individuals detected")
 
