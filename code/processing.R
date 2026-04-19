@@ -18,99 +18,149 @@
 # ------------------------------------------------------------------------------
 
 # data prep
-
-df_FM <-     arrow::read_feather("data_fmt/trajectory/FM_df.feather")
-df_alates <- arrow::read_feather("data_fmt/trajectory/alates_df.feather")
-df_worker <- arrow::read_feather("data_fmt/trajectory/worker_df.feather")
-df_soldier <- arrow::read_feather("data_fmt/trajectory/soldier_df.feather")
-
-pattern <- "^.*\\d+-\\d+"
-df_FM <- df_FM %>% mutate(video = str_extract(video, pattern))
-df_alates <- df_alates %>% mutate(video = str_extract(video, pattern))
-df_worker <- df_worker %>% mutate(video = str_extract(video, pattern))
-df_soldier <- df_soldier %>% mutate(video = str_extract(video, pattern))
-
-# skip_list
-df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_F_1-6" & ind_id %in% c(4, 5)))
-df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_H_7-12" & ind_id %in% c(4)))
-df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_I_1-6" & ind_id %in% c(1,4)))
-df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_I_7-12" & ind_id %in% c(1))) 
-df_alates <- df_alates %>% filter(!(video == "Ret_ama_MW_G_7-12" & ind_id %in% c(4,5)))
-df_alates <- df_alates %>% filter(!(video == "Ret_ama_SM_I_7-12"& ind_id %in% c(0, 3)))
-
-df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_F_1-6" & ind_id %in% c(4, 5)))
-df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_G_1-6" & ind_id %in% c(1,2,4,5)))
-df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_H_7-12" & ind_id %in% c(4)))
-df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_I_1-6" & ind_id %in% c(1,4)))
-df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_I_7-12" & ind_id %in% c(1))) 
-df_worker <- df_worker %>% filter(!(video == "Ret_ama_MW_G_7-12" & ind_id %in% c(4,5)))
-df_soldier <- df_soldier %>% filter(!(video == "Ret_ama_SM_I_7-12"& ind_id %in% c(0, 3)))
+{
+  df_FM <-     arrow::read_feather("data_fmt/trajectory/FM_df.feather")
+  df_alates <- arrow::read_feather("data_fmt/trajectory/alates_df.feather")
+  df_worker <- arrow::read_feather("data_fmt/trajectory/worker_df.feather")
+  df_soldier <- arrow::read_feather("data_fmt/trajectory/soldier_df.feather")
+  
+  pattern <- "^.*\\d+-\\d+"
+  df_FM <- df_FM %>% mutate(video = str_extract(video, pattern))
+  df_alates <- df_alates %>% mutate(video = str_extract(video, pattern))
+  df_worker <- df_worker %>% mutate(video = str_extract(video, pattern))
+  df_soldier <- df_soldier %>% mutate(video = str_extract(video, pattern))
+  
+  # skip_list
+  df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_F_1-6" & ind_id %in% c(4, 5)))
+  df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_H_7-12" & ind_id %in% c(4)))
+  df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_I_1-6" & ind_id %in% c(1,4)))
+  df_alates <- df_alates %>% filter(!(video == "Ret_ama_FW_I_7-12" & ind_id %in% c(1))) 
+  df_alates <- df_alates %>% filter(!(video == "Ret_ama_MW_G_7-12" & ind_id %in% c(4,5)))
+  df_alates <- df_alates %>% filter(!(video == "Ret_ama_SM_I_7-12"& ind_id %in% c(0, 3)))
+  
+  df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_F_1-6" & ind_id %in% c(4, 5)))
+  df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_G_1-6" & ind_id %in% c(1,2,4,5)))
+  df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_H_7-12" & ind_id %in% c(4)))
+  df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_I_1-6" & ind_id %in% c(1,4)))
+  df_worker <- df_worker %>% filter(!(video == "Ret_ama_FW_I_7-12" & ind_id %in% c(1))) 
+  df_worker <- df_worker %>% filter(!(video == "Ret_ama_MW_G_7-12" & ind_id %in% c(4,5)))
+  df_soldier <- df_soldier %>% filter(!(video == "Ret_ama_SM_I_7-12"& ind_id %in% c(0, 3)))
+}
 
 # plot all trajectories
-
-plot_traj <- function(df, ...){
-  ggplot(df, aes(x = x_body, y = y_body, col = as.factor(ind_id) ))+
-    scale_color_viridis(discrete = T, option = "D")+
-    geom_path(alpha = 1)+
-    coord_cartesian(xlim = c(0, 2100), ylim=c(0, 1400)) +
-    scale_y_reverse() +
-    facet_wrap(~video)+
-    theme_classic()+
-    theme(aspect.ratio = 2/3, legend.position = "none")+
-    labs(...)
+{
+  plot_traj <- function(df, ...){
+    ggplot(df, aes(x = x_body, y = y_body, col = as.factor(ind_id) ))+
+      scale_color_viridis(discrete = T, option = "D")+
+      geom_path(alpha = 1)+
+      coord_cartesian(xlim = c(0, 2100), ylim=c(0, 1400)) +
+      scale_y_reverse() +
+      facet_wrap(~video)+
+      theme_classic()+
+      theme(aspect.ratio = 2/3, legend.position = "none")+
+      labs(...)
+  }
+  
+  save_comparison_plot <- function(df1, df2, video_name) {
+    p1 <- plot_traj(df1, title = video_name)
+    p2 <- plot_traj(df2)
+    ggsave(
+      filename = file.path("output/trajectory", paste0(video_name, ".png")),
+      plot = p1 + p2, width = 6, height = 4
+    )
+  }
+  
+  # FM
+  video_list <- unique(df_FM$video)
+  for(i in 1:length(video_list)){
+    save_comparison_plot(
+      df1 = df_FM %>% filter(video == video_list[i] & ind_id %% 2 == 0),
+      df2 = df_FM %>% filter(video == video_list[i] & ind_id %% 2 == 1),
+      video_name = video_list[i])
+  }
+  
+  # alate-worker
+  video_list_a <- unique(df_alates$video)
+  video_list_w <- unique(df_worker$video)
+  video_list <- video_list_a[video_list_a %in% video_list_w]
+  for(i in 1:length(video_list)){
+    save_comparison_plot(
+      df1 = df_alates %>% filter(video == video_list[i]),
+      df2 = df_worker %>% filter(video == video_list[i]),
+      video_name = video_list[i])
+  }
+  
+  # alate-soldier
+  video_list_s <- unique(df_soldier$video)
+  video_list <- video_list_a[video_list_a %in% video_list_s]
+  for(i in 1:length(video_list)){
+    save_comparison_plot(
+      df1 = df_alates %>% filter(video == video_list[i]),
+      df2 = df_soldier %>% filter(video == video_list[i]),
+      video_name = video_list[i])
+  }
 }
 
-save_comparison_plot <- function(df1, df2, video_name) {
-  p1 <- plot_traj(df1, title = video_name)
-  p2 <- plot_traj(df2)
-  ggsave(
-    filename = file.path("output/trajectory", paste0(video_name, ".png")),
-    plot = p1 + p2, width = 6, height = 4
+# data pairing
+{
+  df_FM <- df_FM |> mutate(
+    colony = str_split_i(video, "_", 4),
+    treat  = str_split_i(video, "_", 3),
+    well_id = ind_id %/% 2,
+    role = if_else( ind_id %% 2 == 0, "female", "male" ),
+    role_id = if_else( ind_id %% 2 == 0, 0, 1)
   )
+  
+  df_alates <- df_alates |> group_by(video) |>
+    mutate(
+    colony = str_split_i(video, "_", 4),
+    treat  = str_split_i(video, "_", 3),
+    well_id = dense_rank(ind_id),
+    role = if_else( treat == "FW", "female", "male"),
+    role_id = 1
+  )
+  
+  df_worker <- df_worker |> group_by(video) |>
+    mutate(
+      colony = str_split_i(video, "_", 4),
+      treat  = str_split_i(video, "_", 3),
+      well_id = dense_rank(ind_id),
+      role = "worker", role_id = 0
+    )
+  
+  df_soldier <- df_soldier |> group_by(video) |>
+    mutate(
+      colony = str_split_i(video, "_", 4),
+      treat  = str_split_i(video, "_", 3),
+      well_id = dense_rank(ind_id),
+      role = "soldier", role_id = 0
+    )
+  
+  df_all <- bind_rows(df_FM, df_alates, df_worker, df_soldier)
+  df_all <- df_all |> mutate(ind_name = paste(video, well_id, role, sep = "_"))
+
+  euclid_dis <- function(x0, y0, x1, y1){
+    sqrt((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))
+  }
+  
+  df_body <- df_all |> mutate(body_length = euclid_dis(x_head, y_head, x_body, y_body) +
+                     euclid_dis(x_tip, y_tip, x_body, y_body)) |>
+    group_by(video, well_id, role, ind_name) |>
+    summarise(body_length = mean(body_length, na.rm = T), .groups = "drop")
+  
+  save(df_all, df_body, file = "data_fmt/df_all.rda")
 }
 
-
-# FM
-video_list <- unique(df_FM$video)
-for(i in 1:length(video_list)){
-  save_comparison_plot(
-    df1 = df_FM %>% filter(video == video_list[i] & ind_id %% 2 == 0),
-    df2 = df_FM %>% filter(video == video_list[i] & ind_id %% 2 == 1),
-    video_name = video_list[i])
-}
-
-# alate-worker
-video_list_a <- unique(df_alates$video)
-video_list_w <- unique(df_worker$video)
-video_list <- video_list_a[video_list_a %in% video_list_w]
-for(i in 1:length(video_list)){
-  save_comparison_plot(
-    df1 = df_alates %>% filter(video == video_list[i]),
-    df2 = df_worker %>% filter(video == video_list[i]),
-    video_name = video_list[i])
-}
-
-# alate-soldier
-video_list_s <- unique(df_soldier$video)
-video_list <- video_list_a[video_list_a %in% video_list_s]
-for(i in 1:length(video_list)){
-  save_comparison_plot(
-    df1 = df_alates %>% filter(video == video_list[i]),
-    df2 = df_soldier %>% filter(video == video_list[i]),
-    video_name = video_list[i])
-}
-
-
-
-
-
-# checke metadata
-meta_df <- data.frame(fread("individual_list.csv"))[,1:6]
-meta_df <- meta_df %>% mutate(
-  colony = str_split(meta_df$video, "_", simplify = TRUE)[, 3],
-  ref_name = paste(scientific_name, type)
+df_pair <- df_all |> pivot_wider(
+  id_cols = c(video, well_id, time_sec, colony, treat), 
+  names_from = role_id,
+  values_from = starts_with("x_") | starts_with("y_")
 )
-table(meta_df[,c("ref_name", "colony")])
+
+df_all |> filter(video == "Ret_ama_SM_F_1-4", time_sec == 0.2) |> View()
+
+
+
 
 # ------------------------------------------------------------------------------
 # compute relative positioning of termites and termitophiles with kinetic parameters
