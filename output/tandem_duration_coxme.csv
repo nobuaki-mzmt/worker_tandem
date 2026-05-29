@@ -1,2 +1,0 @@
-"","Df","Chisq","Pr(>Chisq)","formula"
-"1",3,64.9045498052251,5.2574699347905e-14,"Surv(duration, cens) ~ treat + (1 | video/well_id)"

@@ -1,4 +1,0 @@
-"","term","statistic","df","p.value","formula"
-"1","time_min",480.176701411889,1,1.95566225021334e-106,"tandem_prop ~ time_min * treat + (1 | pair_id)"
-"2","treat",32.4110862969417,3,4.28683791213287e-07,"tandem_prop ~ time_min * treat + (1 | pair_id)"
-"3","time_min:treat",115.488103270471,3,7.22767380291453e-25,"tandem_prop ~ time_min * treat + (1 | pair_id)"

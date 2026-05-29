@@ -1,2 +1,0 @@
-"","Chisq","Df","Pr(>Chisq)","formula"
-"1",22.1359889775089,3,6.11161489832091e-05,"tandem_transition ~ treat + (1 | pair_id)"
