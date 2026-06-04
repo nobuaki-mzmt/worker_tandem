@@ -21,6 +21,8 @@ library(survival)
 library(scales)
 library(multcomp)
 library(coxme)
+library(emmeans)
+library(openxlsx)
 
 
 euclid_dis <- function(x0, y0, x1, y1){
