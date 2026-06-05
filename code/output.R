@@ -56,7 +56,7 @@
       coord_cartesian(xlim = c(-2,2), ylim = c(-2,2)) +
       theme(legend.position = "none", aspect.ratio = 1) +
       labs(x = "", y = "", title = i_v)
-    ggsave(p1, file = sprintf("output/relative_pos_each/%s.pdf", i_v), width = 4, height = 3)
+    ggsave(p1, file = sprintf("output/relative_pos_each/%s.svg", i_v), width = 4, height = 3)
   }
   
   ggplot(df_rel, aes(x = rx0, y = ry0)) +
@@ -66,7 +66,7 @@
     coord_cartesian(xlim = c(-2,2), ylim = c(-2,2)) +
     theme(legend.position = "none", aspect.ratio = 1) +
     labs(x = "", y = "")
-  ggsave(file = sprintf("output/relative_pos.pdf"), width = 4, height = 3)
+  ggsave(file = sprintf("output/relative_pos.svg"), width = 4, height = 3)
 }
 
 # tandem prop time development ----
@@ -102,14 +102,14 @@
     
     df_out <- plot_tandem_prop_time(df_pair, time_bin = 60)
     df_tandem_prop_well = df_out[[1]]
-    ggsave(df_out[[2]], filename = "output/tandem_prop_well.pdf", 
-            device = cairo_pdf, family = "Arial",
-            width = 3, height = 3)
+    ggsave(df_out[[2]], filename = "output/tandem_prop_well.svg", 
+            device = svglite, fix_text_size = FALSE, 
+            width = 3, height = 3, bg = "transparent")
     
     df_out <- plot_tandem_prop_time(df_dish, time_bin = 60)
     df_tandem_prop_dish = df_out[[1]]
-    ggsave(df_out[[2]], filename = "output/tandem_prop_dish.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(df_out[[2]], filename = "output/tandem_prop_dish.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
   }
@@ -230,20 +230,20 @@
     
     # distribution of tandem duration
     ggplot(df_tandem, aes(x = duration, fill = treat)) +
-      geom_histogram(bins = 80, alpha = 0.5) +
+      geom_histogram(bins = 80, alpha = 0.75) +
       scale_fill_manual(values = treat_colors) +
       scale_x_log10() +
       geom_vline(xintercept = c(1.5), linetype = "dashed") +
-      facet_wrap(~treat, labeller = as_labeller(treat_labels)) +
+      facet_wrap(~treat, labeller = as_labeller(treat_labels), ncol = 1) +
       theme_bw(base_size = 10) +
       labs(x = "Tandem duration (sec)", y = "Count") +
       theme(aspect.ratio = 2/3,
             legend.position = "none",
             panel.grid = element_blank(),
             strip.background = element_blank())  
-    ggsave(filename = "output/tandem_duration_hist_dish.pdf", 
-          device = cairo_pdf, family = "Arial",
-          width = 5, height = 3)
+    ggsave("output/tandem_duration_hist_dish.svg", 
+           device = svglite, fix_text_size = FALSE, width = 3, height = 4)
+    
     
     # short tandem events (< 1.6 sec = 8 frames) are different events
     df_tandem <- df_tandem |>
@@ -252,13 +252,48 @@
     
     # short tandem events happen a lot at the beginning in MM, but not in FM
     # use min to avoid convergence error
-    fit <- glmer(tandem_type == "short" ~ treat * start_time_min + (1|pair_id),
+    fit <- glmer(tandem_type == "long" ~ treat * start_time_min + (1|pair_id),
                  family = binomial, data = df_tandem)
     df_res <- tibble(tidy(Anova(fit)), formula = deparse(formula(fit) ))
     res <- summary(fit)
     
-    writeData(wb, "short_tandem_anova", df_res)
-    writeData(wb, "short_tandem_coeff", res$coefficients |> round(3))
+    # plot
+    pred_df <- expand.grid(
+      treat = c("FM", "MM"),
+      start_time_min = seq(0, max(df_tandem$start_time_min), length.out = 100)
+    )
+    pred_df$prob <- predict(fit, pred_df, re.form = NA, type = "response")
+    
+    df_binned <- df_tandem |>
+      mutate(time_bin = cut(start_time_min, 
+                            breaks = seq(0, 30, length.out = 16),
+                            include.lowest = TRUE)) |>
+      group_by(treat, time_bin) |>
+      summarise(
+        prop_short = mean(tandem_type == "long"),
+        n = n(),
+        mid = mean(start_time_min),
+        .groups = "drop"
+      )
+    
+    ggplot() +
+      geom_point(data = df_binned, 
+                 aes(x = mid, y = prop_short, color = treat, size = n),
+                 alpha = 0.6) +
+      geom_line(data = pred_df,
+                aes(x = start_time_min, y = prob, color = treat),
+                linewidth = 1) +
+      scale_color_manual(values = treat_colors, labels = treat_labels) +
+      scale_size_continuous(range = c(1, 3), name = "n events", breaks = c(100,150)) +
+      labs(x = "Start time (min)", y = "Prob of long tandem", color = NULL) +
+      scale_y_continuous(limits = c(0,1), breaks = c(0,0.5,1), label = c(0,0.5,1)) +
+      theme_classic(base_size = 10) +
+      theme(aspect.ratio = 1, legend.position = "top")
+    
+    ggsave(filename = "output/prop_long_tandem_dish.svg", 
+           device = svglite, fix_text_size = FALSE,
+           width = 3.5, height = 3.5)
+    
     
     # only focus on long tandem events
     # df_tandem_long <- df_tandem |> filter(tandem_type == "long")
@@ -283,8 +318,8 @@
       theme(aspect.ratio = 1,
             legend.position = "none")
     
-    ggsave(filename = "output/longest_tandem_start_sec_dish.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(filename = "output/longest_tandem_start_sec_dish.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
     fit_cox <- coxph(Surv(start_time) ~ treat, data = df_longest_tandem)
@@ -309,8 +344,8 @@
       theme(aspect.ratio = 1,
             legend.position = "none")
     
-    ggsave(filename = "output/longest_tandem_start_event_dish.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(filename = "output/longest_tandem_start_event_dish.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
     r <- glm.nb(tandem_event ~ treat,  data = df_longest_tandem)
@@ -338,8 +373,8 @@
       theme_classic(base_size = 10) +
       theme(aspect.ratio = 1.25, legend.position = "none")
     
-    ggsave(filename = "output/longest_tandem_duration_dish.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(filename = "output/longest_tandem_duration_dish.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
     fit_cox <- coxph(Surv(duration, cens) ~ treat, data = df_longest_tandem)
@@ -389,7 +424,7 @@
     
     # distribution of tandem duration
     ggplot(df_tandem, aes(x = duration, fill = treat)) +
-      geom_histogram(bins = 80, alpha = 0.5) +
+      geom_histogram(bins = 80, alpha = 0.75) +
       scale_fill_manual(values = treat_colors) +
       scale_x_log10() +
       geom_vline(xintercept = c(1.5), linetype = "dashed") +
@@ -400,8 +435,8 @@
             legend.position = "none",
             panel.grid = element_blank(),
             strip.background = element_blank())  
-    ggsave(filename = "output/tandem_duration_hist_well.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(filename = "output/tandem_duration_hist_well.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 5, height = 3)
     
     # short tandem events (< 1.6 sec = 8 frames) are different events
@@ -411,8 +446,11 @@
     
     # short tandem events happen a lot at the beginning in MM, but not in FM
     # use min to avoid convergence error
-    fit <- glmer(tandem_type == "short" ~ treat * start_time_min + (1|pair_id),
+    fit <- glmer((tandem_type == "long")*1 ~ treat * start_time_min + (1|pair_id),
                  family = binomial, data = df_tandem)
+    
+    performance::check_overdispersion(fit)
+    
     df_res <- tibble(tidy(Anova(fit)), formula = deparse(formula(fit) ))
     res <- summary(fit)
     pairwise_res <- emtrends(fit, pairwise ~ treat, var = "start_time_min")
@@ -426,12 +464,34 @@
     )
     pred_df$prob <- predict(fit, pred_df, re.form = NA, type = "response")
     
-    ggplot(pred_df, aes(x = start_time_min, y = prob, color = treat)) +
-      geom_line(linewidth = 1) +
+    
+    df_binned <- df_tandem |>
+      mutate(time_bin = cut(start_time_min, 
+                            breaks = seq(0, 30, length.out = 16),
+                            include.lowest = TRUE)) |>
+      group_by(treat, time_bin) |>
+      summarise(
+        prop_long = mean(tandem_type == "long"),
+        n = n(),
+        mid = mean(start_time_min),
+        .groups = "drop"
+      )
+    
+    ggplot() +
+      geom_point(data = df_binned, 
+                 aes(x = mid, y = prop_long, color = treat, size = n),
+                 alpha = 0.6) +
+      geom_line(data = pred_df,
+                aes(x = start_time_min, y = prob, color = treat),
+                linewidth = 1) +
       scale_color_manual(values = treat_colors, labels = treat_labels) +
-      labs(x = "Time (min)", y = "P(short tandem)", color = NULL) +
+      scale_size_continuous(range = c(1, 3), name = "n events", breaks = c(100,150)) +
+      labs(x = "Start time (min)", y = "Prob of long tandem", color = NULL) +
+      scale_y_continuous(limits = c(0,1), breaks = c(0,0.5,1), label = c(0,0.5,1)) +
       theme_classic(base_size = 10) +
-      theme(aspect.ratio = 1, legend.position = c(0.8, 0.8))
+      theme(aspect.ratio = 1, legend.position = "top")
+    
+    
     
     # only focus on long tandem events
     df_tandem_long <- df_tandem |> filter(tandem_type == "long")
@@ -450,8 +510,8 @@
             legend.title = element_blank(),
             legend.position = c(0.8,0.4))
     
-    ggsave( filename = "output/tandem_duration_cum_hazard_well.pdf", 
-            device = cairo_pdf, family = "Arial",
+    ggsave( filename = "output/tandem_duration_cum_hazard_well.svg", 
+            device = svglite, fix_text_size = FALSE,
             width = 4, height = 3)
   
     fit_cox <- coxme(Surv(duration, cens) ~ treat+ (1|pair_id), data = df_longest_tandem)
@@ -465,7 +525,7 @@
     
     # longest tandem
     df_longest_tandem <- df_tandem |> group_by(pair_id) |>
-      slice_max(duration, n = 1, with_ties = TRUE) |>
+      slice_max(duration, n = 1, with_ties = F) |>
       ungroup()
     
     # longest tandem start later in MM (in sec)
@@ -480,8 +540,8 @@
       theme(aspect.ratio = 1,
             legend.position = "none")
     
-    ggsave(filename = "output/longest_tandem_start_sec_well.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(filename = "output/longest_tandem_start_sec_well.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
     fit_cox <- coxph(Surv(start_time) ~ treat, data = df_longest_tandem)
@@ -505,8 +565,8 @@
       theme(aspect.ratio = 1,
             legend.position = "none")
     
-    ggsave(filename = "output/longest_tandem_start_event_well.pdf", 
-           device = cairo_pdf, family = "Arial",
+    ggsave(filename = "output/longest_tandem_start_event_well.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
     r <- glm.nb(tandem_event ~ treat,  data = df_longest_tandem)
@@ -525,7 +585,8 @@
       geom_boxplot( width = 0.06, outlier.shape = NA,
                     fill = "white", alpha = 0.6, color = "grey30", linewidth = 0.4 ) +
       scale_x_log10( breaks = c(1, 10, 100, 1000), labels = scales::label_number()) +
-      scale_y_discrete(labels = treat_labels)+ 
+      scale_y_discrete(labels = treat_labels,limits = rev,
+                       expand = expansion(mult = c(0.1, 0.1)))+
       #coord_cartesian(ylim = c(1,  2.2)) +
       scale_color_manual(values = treat_colors, labels = treat_labels)+
       scale_fill_manual(values = treat_colors, labels = treat_labels)  +
@@ -533,8 +594,10 @@
       theme_classic(base_size = 10) +
       theme(aspect.ratio = 1.25, legend.position = "none")
     
-    ggsave(filename = "output/longest_tandem_duration_well.pdf", 
-           device = cairo_pdf, family = "Arial",
+    df_longest_tandem |> filter(duration < 10) |> dplyr::select(pair_event, duration)
+    
+    ggsave(filename = "output/longest_tandem_duration_well.svg", 
+           device = svglite, fix_text_size = FALSE,
            width = 3, height = 3)
     
     fit_cox <- coxph(Surv(duration, cens) ~ treat, data = df_longest_tandem)
@@ -576,7 +639,7 @@
     theme(aspect.ratio = 3,
           legend.position = "none")
   
-  ggsave("output/step_distribution.pdf", device = cairo_pdf, family = "Arial",
+  ggsave("output/step_distribution.svg", device = svglite, fix_text_size = FALSE,
          width = 3, height = 5.5)
   
   df_dis_dist <- df_dish |> pivot_longer(cols = starts_with("post_step")) |> 
@@ -594,135 +657,67 @@
     theme(aspect.ratio = 3,
           legend.position = "none")
   
-  df_pair |>  group_by(pair_id) |> 
-    dplyr::select(pair_id, time_sec, treat, tandem, post_step_0, post_step_1) |>
-    arrange(time_sec, .by_group = TRUE) |>
-    mutate(
-      run_id = rleid(tandem),
-      run_len = ave(tandem, run_id, FUN = length)
-    ) |>
-    mutate(
-      cluster_start = tandem & lag(!tandem, default = TRUE),
-      cluster_idx = cumsum(cluster_start),
-      cluster_idx = if_else(tandem, cluster_idx, NA_integer_),
-      pair_event = if_else(
-        !is.na(cluster_idx),
-        sprintf("%s_%02d", pair_id, cluster_idx),
-        NA_character_
-        )
-      )
-}
-
-df_analysis <- df_pair |> 
-  group_by(pair_id) |> 
-  dplyr::select(pair_id, time_sec, treat, tandem, post_step_0, post_step_1, follow_dis) |>
-  arrange(time_sec, .by_group = TRUE) |>
-  mutate(
-    run_id = rleid(tandem)
-  ) |> 
-  group_by(pair_id, run_id) |> 
-  mutate(
-    run_duration = max(time_sec) - min(time_sec),
-    tandem = if_else(tandem & run_duration < 1.5, FALSE, tandem)
-  ) |> 
-  group_by(pair_id) |> 
-  mutate(
-    run_id = rleid(tandem), # Recalculate IDs since some TRUE states became FALSE
-    is_onset = tandem & lag(!tandem, default = FALSE),
-    is_offset = !tandem & lag(tandem, default = FALSE)
-  ) |> 
-  ungroup()
-
-extract_window <- function(df, flag_col, window_size = 10) {
-  event_indices <- which(df[[flag_col]])
-  if(length(event_indices) == 0) return(tibble())
-  
-  lapply(seq_along(event_indices), function(i) {
-    idx <- event_indices[i]
-    start_idx <- max(1, idx - window_size)
-    end_idx <- min(nrow(df), idx + window_size)
-    
-    df[start_idx:end_idx, ] |> 
-      mutate(
-        event_instance = i,
-        relative_step = (start_idx:end_idx) - idx
-      )
-  }) |> bind_rows()
-}
-
-df_onsets <- df_analysis |> 
-  group_split() |> 
-  lapply(extract_window, flag_col = "is_onset", window_size = 5) |> 
-  bind_rows()
-
-df_onsets <- df_onsets |> filter( ((relative_step < 0) & !tandem) | ((relative_step >= 0) & tandem) )   
-
-df_plot_onset <- df_onsets |>
-  pivot_longer(cols = c(post_step_0, post_step_1), names_to = "step_type", values_to = "step_length") |>
-  #pivot_longer(cols = c(acc_0, acc_1), names_to = "step_type", values_to = "step_length") |>
-  group_by(relative_step, step_type, treat) |>
-  summarise(mean_step = mean(step_length, na.rm = TRUE), .groups = 'drop')
-
-ggplot(df_plot_onset, aes(x = relative_step, y = mean_step, color = step_type)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
-  geom_line(size = 1) +
-  facet_wrap(~treat) +
-  labs(
-    title = "Step Length Dynamics Heading Into Tandem Run",
-    x = "Relative Steps (0 = Tandem Starts)",
-    y = "Mean Step Length"
-  ) +
-  theme_minimal()
-
-df_offsets <- df_analysis |> 
-  group_split() |> 
-  lapply(extract_window, flag_col = "is_offset", window_size = 15) |> 
-  bind_rows()
-
-
-df_offsets <- df_offsets |> filter( ((relative_step < 0) & tandem) | ((relative_step >= 0) & !tandem) )   
-
-df_dis_dist <- df_offsets |> pivot_longer(cols = starts_with("post_step")) |> 
-  dplyr::select(name, value, treat, tandem)
-
-ggplot(df_dis_dist) +
-  geom_density_ridges(aes(x = value, y = treat, fill= name), stat = "binline", 
-                      alpha = 0.5, binwidth = 0.04, scale = 0.85) +
-  labs(x = "Step length (BL)", y = "") +
-  scale_y_discrete(expand = c(0, 0.1),labels = treat_labels) +
-  scale_x_continuous(breaks = c(0,0.5,1), labels =  c(0,0.5,1)) +
-  scale_fill_manual(values = c(post_step_0 = "#1B7837", post_step_1 = "#D8B58A")) +
-  coord_cartesian(xlim = c(0,1.5)) +
-  theme_classic(base_size = 10) +
-  theme(aspect.ratio = 3,
-        legend.position = "none")
-
-
-df_plot_offset <- df_offsets |>
-  pivot_longer(cols = c(post_step_0, post_step_1), names_to = "step_type", values_to = "step_length") |>
-  #pivot_longer(cols = c(acc_0, acc_1), names_to = "step_type", values_to = "step_length") |>
-  group_by(relative_step, step_type, treat) |>
-  summarise(mean_step = mean(step_length, na.rm = TRUE), .groups = 'drop')
-
-ggplot(df_plot_offset, aes(x = relative_step, y = mean_step, color = step_type)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
-  geom_line(size = 1) +
-  facet_wrap(~treat) +
-  labs(
-    title = "Step Length Dynamics Heading Into Tandem Run",
-    x = "Relative Steps (0 = Tandem Starts)",
-    y = "Mean Step Length"
-  ) +
-  theme_minimal()
-
-df_offsets |> filter(relative_step < 0)
-
-
-# acc ----1
-{
-  df_dis_acc <- df_analysis |> dplyr::select(follow_dis, acc_0, acc_1, treat, tandem) |>
+  df_dis_acc <- df_pair |> dplyr::select(follow_dis, post_step_0, post_step_1, treat, tandem) |>
     mutate(follow_dis_bin = round(follow_dis, 1)) |>
+    pivot_longer(cols = starts_with("post_"))
+  
+  ggplot(df_dis_acc |> filter(tandem), 
+         aes(x = follow_dis_bin, y = value)) + 
+    stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, aes(fill = name) ) +
+    stat_summary(geom = "line", fun = mean, linewidth = 1, aes(col = name)) +
+    scale_color_manual(values = c(post_step_0 = "#1B7837", post_step_1 = "#D8B58A")) +
+    scale_fill_manual(values = c(post_step_0 = "#1B7837", post_step_1 = "#D8B58A")) +
+    geom_hline(yintercept = 0)+
+    scale_x_continuous(breaks = c(0,0.5,1), labels =  c(0,0.5,1)) +
+    scale_y_continuous(breaks = c(-0.03, 0, 0.03), 
+                       labels = c(-0.03, 0, 0.03)) +
+    coord_cartesian(xlim = c(0, 1.5),
+                    #ylim = c(-0.035, 0.035)
+                    )+
+    theme_bw(base_size = 11) +
+    facet_wrap(~ treat, labeller = labeller(treat = treat_labels)) +
+    labs(x = "Distance (BL)", y = "Accerelation (BL/sec2)") +
+    theme(strip.placement = "outside",
+          strip.background = element_blank(),
+          legend.position = "none",
+          legend.title = element_blank(),
+          aspect.ratio = 3/4
+    )
+  
+}
+
+
+# acc ----
+{
+  df_dis_acc <- df_pair |> dplyr::select(follow_dis, acc_0, acc_1, treat, tandem) |>
+    mutate(follow_dis_bin = round(follow_dis, 1),
+           treat_new = treat == "FM") |> filter(abs(acc_0) > min_acc | abs(acc_1) > min_acc) |> 
     pivot_longer(cols = starts_with("acc"))
+  
+  ggplot(df_dis_acc |> filter(tandem), 
+         aes(x = follow_dis_bin, y = value)) + 
+    stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, aes(fill = name) ) +
+    stat_summary(geom = "line", fun = mean, linewidth = 1, aes(col = name)) +
+    scale_color_manual(values = c(acc_0 = "#1B7837", acc_1 = "#D8B58A")) +
+    scale_fill_manual(values = c(acc_0 = "#1B7837", acc_1 = "#D8B58A")) +
+    geom_hline(yintercept = 0)+
+    scale_x_continuous(breaks = c(0,0.5,1), labels =  c(0,0.5,1)) +
+    scale_y_continuous(breaks = c(-0.03, 0, 0.03), 
+                       labels = c(-0.03, 0, 0.03)) +
+    #coord_cartesian(xlim = c(0, 1.1), ylim = c(-0.035, 0.035))+
+    theme_bw(base_size = 11) +
+    facet_wrap(~ treat_new, labeller = labeller(treat = treat_labels)) +
+    labs(x = "Distance (BL)", y = "Accerelation (BL/sec2)") +
+    theme(strip.placement = "outside",
+          strip.background = element_blank(),
+          legend.position = "none",
+          legend.title = element_blank(),
+          aspect.ratio = 3/4
+          )
+  
+  ggsave("output/accerelation.svg", device = svglite, fix_text_size = FALSE,
+         width = 5, height = 4)
+  
   
   ggplot(df_dis_acc |> filter(tandem), 
          aes(x = follow_dis_bin, y = value)) + 
@@ -743,8 +738,82 @@ df_offsets |> filter(relative_step < 0)
           legend.position = "none",
           legend.title = element_blank(),
           aspect.ratio = 3/4
-          )
+    )
   
-  ggsave("output/accerelation.pdf", device = cairo_pdf, family = "Arial",
-         width = 5, height = 4)
 }
+
+
+# attack in MW2 ----
+{
+  df <- read.csv("data_raw/master_well.csv")
+  
+  chisq.test(matrix(c(5,9,0,17), ncol= 2) )
+  fisher.test(matrix(c(5,9,0,17), ncol= 2) )
+  
+  df_mw2 <- df |> filter(treat == "MW2")
+  
+  df_mw2 |> dim()
+  df_mw2 |> filter(alate_damaged == 1) |> dim()
+  
+  df_damaged <- df_mw2 |> filter(alate_damaged == 1)
+  
+  p_before  <- mean(df_damaged$tandem_before_attack == 1, na.rm = TRUE)
+  p_after   <- mean(df_damaged$tandem_after_attack == 1, na.rm = TRUE)
+  
+  n_before_total  <- sum(!is.na(df_damaged$tandem_before_attack))
+  n_before_tandem <- sum(df_damaged$tandem_before_attack == 1, na.rm = TRUE)
+  n_before_non    <- n_before_total - n_before_tandem
+  
+  n_after_total   <- sum(!is.na(df_damaged$tandem_after_attack))
+  n_after_tandem  <- sum(df_damaged$tandem_after_attack == 1, na.rm = TRUE)
+  n_after_non     <- n_after_total - n_after_tandem
+  
+  df_stacked <- tibble(
+    Group = c(
+      "Before Attack", "Before Attack",
+      "After Attack", "After Attack"
+    ),
+    Type = c(
+      "Non-Tandem", "Tandem Run",
+      "Non-Tandem", "Tandem Run"
+    ),
+    Proportion = c(
+      1 - p_before,  p_before,
+      1 - p_after,   p_after
+    ),
+    Count = c(
+      n_before_non, n_before_tandem,
+      n_after_non,  n_after_tandem
+    )
+  )
+  
+  df_stacked$Group <- factor(df_stacked$Group, levels = c("Before Attack", "After Attack"))
+  df_stacked$Type  <- factor(df_stacked$Type, levels = c("Non-Tandem", "Tandem Run"))
+  
+  ggplot(df_stacked, aes(x = Group, y = Proportion, fill = Type)) +
+    geom_col(width = 0.5, position = "stack", color = "white", linewidth = 0.6) +
+    geom_text(
+      aes(label = paste0("n = ", Count)), 
+      position = position_stack(vjust = 0.5), 
+      color = "white", 
+      fontface = "bold",
+      size = 4
+    ) +
+    scale_y_continuous(labels = percent, limits = c(0, 1), breaks = seq(0, 1, 0.5)) +
+    scale_fill_manual(values = c(
+      "Non-Tandem" = "gray60",
+      "Tandem Run"  = "coral2"
+    )) + 
+    labs(x = "", y = "Proportion") +
+    theme_classic() +
+    theme(
+      legend.position = "none",
+      aspect.ratio = 1
+    )
+  
+  ggsave(filename = "output/attack_tandem.svg", 
+         device = svglite, fix_text_size = FALSE,
+         width = 3, height = 3)
+  
+}
+
