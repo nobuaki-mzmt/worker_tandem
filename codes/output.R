@@ -4,7 +4,7 @@
 
 # config ----
 {
-  source("code/source.R")
+  source("codes/source.R")
   
   treat_labels <- c(
     FM  = "Male - Female",
@@ -112,7 +112,7 @@ if(F){
             device = svglite, fix_text_size = FALSE, 
             width = 3, height = 3, bg = "transparent")
     
-    df_out <- plot_tandem_prop_time(df_dish_temp, time_bin = 60)
+    df_out <- plot_tandem_prop_time(df_dish, time_bin = 60)
     df_tandem_prop_dish = df_out[[1]]
     ggsave(df_out[[2]], filename = "output/tandem_prop_dish.svg", 
            device = svglite, fix_text_size = FALSE,
@@ -672,6 +672,12 @@ if(F){
     theme(aspect.ratio = 1.5,
           legend.position = "none")
   
+  design <- "
+    A#
+    AB
+    AB
+    A#
+  "
   p_well + p_dish + plot_layout(design = design)
   ggsave("output/step_distribution.svg", device = svglite, fix_text_size = FALSE,
          width = 5, height = 5.5)

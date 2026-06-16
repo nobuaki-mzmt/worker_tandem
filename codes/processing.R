@@ -5,7 +5,7 @@
 
 # config ----
 {
-  source("code/source.R")
+  source("codes/source.R")
   scale_factor_well <- 112/1440 #mm/pix
   scale_factor_dish <- 90/2000  #mm/pix
   plot_traj = F

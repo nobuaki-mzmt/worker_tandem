@@ -6,6 +6,7 @@ This script reads all .h5 results from SLEAP and organize for the further analys
 
 import glob
 import os
+from pathlib import Path
 
 import pandas as pd
 
@@ -15,7 +16,7 @@ import numpy as np
 import scipy
 from scipy.interpolate import interp1d
 
-from helper_function import fill_missing
+from codes.helper_function import fill_missing
 
 #------------------------------------------------------------------------------#
 def data_filter(in_dir, caste, 
@@ -146,6 +147,8 @@ def data_filter(in_dir, caste,
 def main_data_filter(overwrite=True):
     place = "data_raw/trajectory/*"
     out_dir = "data_fmt/trajectory/"
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+
     data_place_caste = glob.glob(place)
     for data_place_caste_i in data_place_caste:
         caste = os.path.basename(data_place_caste_i)

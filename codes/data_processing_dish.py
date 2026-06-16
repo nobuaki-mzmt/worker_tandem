@@ -16,7 +16,7 @@ import numpy as np
 import scipy
 from scipy.interpolate import interp1d
 
-from helper_function import fill_missing
+from codes.helper_function import fill_missing
 
 #------------------------------------------------------------------------------#
 def data_filter(in_dir, original_fps = 30, target_fps = 5):
