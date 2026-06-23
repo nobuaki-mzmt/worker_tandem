@@ -8,7 +8,7 @@ This repository provides access to the source code used for the manuscript
 This study investigates the broadness of tandem running behavior in a termite _Reticulitermes amamianus_. During mating season, mating pairs perform tandem running while looking for a nest site, by males following females. We investigated whether males follow similar to females but non-mating individuals (workers and soldiers). Behavioral observations include posture tracking of laboratory recordings of behavioral interactions. This repository includes the Python/R scripts.
 
 ## Table of Contents
-This repository includes R and Python code for data analysis. Data will be available elsewhere.
+This repository includes R and Python code for data analysis. Data is available at Zenodo: 10.5281/zenodo.20820371.
 
 * [README](./README.md)
 * [code](./code)
