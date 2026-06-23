@@ -754,10 +754,7 @@ if(F){
   df <- df |> dplyr::select(-Note) |>
     mutate(id = paste(Video,well, sep = "_"))
   
-  library(irr)
-  
-  colnames(df)
-  
+
   irr_df <- function(df, variable){
     df %>%
       dplyr::select(id, observer, {{variable}}) %>%

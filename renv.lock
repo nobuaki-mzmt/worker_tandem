@@ -2591,6 +2591,26 @@
       "Author": "Daniel Lüdecke [aut, cre] (ORCID: <https://orcid.org/0000-0002-8895-3206>), Dominique Makowski [aut, ctb] (ORCID: <https://orcid.org/0000-0001-5375-9967>), Indrajeet Patil [aut, ctb] (ORCID: <https://orcid.org/0000-0003-1995-6531>), Philip Waggoner [aut, ctb] (ORCID: <https://orcid.org/0000-0002-7825-7573>), Mattan S. Ben-Shachar [aut, ctb] (ORCID: <https://orcid.org/0000-0002-4287-4801>), Brenton M. Wiernik [aut, ctb] (ORCID: <https://orcid.org/0000-0001-9560-6336>), Vincent Arel-Bundock [aut, ctb] (ORCID: <https://orcid.org/0000-0003-2042-7063>), Etienne Bacher [aut, ctb] (ORCID: <https://orcid.org/0000-0002-9271-5075>), Alex Hayes [rev] (ORCID: <https://orcid.org/0000-0002-4985-5160>), Grant McDermott [ctb] (ORCID: <https://orcid.org/0000-0001-7883-8573>), Rémi Thériault [ctb] (ORCID: <https://orcid.org/0000-0003-4315-6788>), Alex Reinhart [ctb] (ORCID: <https://orcid.org/0000-0002-6658-514X>)",
       "Repository": "CRAN"
     },
+    "irr": {
+      "Package": "irr",
+      "Version": "0.85",
+      "Source": "Repository",
+      "Date": "2026-06-15",
+      "Title": "Various Coefficients of Interrater Reliability and Agreement",
+      "Authors@R": "c(person(given = \"Matthias\", family = \"Gamer\", role = c(\"aut\", \"cre\"), email = \"matthias.gamer@uni-wuerzburg.de\"), person(given = \"Jim\", family = \"Lemon\", role = \"aut\"), person(given = \"Ian\", family = \"Fellows\", role = \"aut\"), person(given = \"Puspendra\", family = \"Singh\", role = \"aut\"))",
+      "Maintainer": "Matthias Gamer <matthias.gamer@uni-wuerzburg.de>",
+      "Depends": [
+        "lpSolve"
+      ],
+      "Description": "Coefficients of Interrater Reliability and Agreement for quantitative, ordinal and nominal data: ICC, Finn-Coefficient, Robinson's A, Kendall's W, Cohen's Kappa, ...",
+      "License": "GPL (>= 2)",
+      "URL": "https://www.r-project.org",
+      "Config/roxygen2/version": "8.0.0",
+      "NeedsCompilation": "no",
+      "Author": "Matthias Gamer [aut, cre], Jim Lemon [aut], Ian Fellows [aut], Puspendra Singh [aut]",
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
+    },
     "isoband": {
       "Package": "isoband",
       "Version": "0.3.0",
@@ -2919,6 +2939,22 @@
       "Maintainer": "Achim Zeileis <Achim.Zeileis@R-project.org>",
       "Repository": "CRAN",
       "Encoding": "UTF-8"
+    },
+    "lpSolve": {
+      "Package": "lpSolve",
+      "Version": "5.6.23",
+      "Source": "Repository",
+      "Title": "Interface to 'Lp_solve' v. 5.5 to Solve Linear/Integer Programs",
+      "Authors@R": "c( person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = \"cre\"), person(\"Michel\", \"Berkelaar\", role = \"aut\") )",
+      "Description": "Lp_solve is freely available (under LGPL 2) software for solving linear, integer and mixed integer programs. In this implementation we supply a \"wrapper\" function in C and some R functions that solve general linear/integer problems, assignment problems, and transportation problems. This version calls lp_solve version 5.5.",
+      "License": "LGPL-2",
+      "URL": "https://github.com/gaborcsardi/lpSolve",
+      "BugReports": "https://github.com/gaborcsardi/lpSolve/issues",
+      "Encoding": "UTF-8",
+      "NeedsCompilation": "yes",
+      "Author": "Gábor Csárdi [cre], Michel Berkelaar [aut]",
+      "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
+      "Repository": "CRAN"
     },
     "magrittr": {
       "Package": "magrittr",
